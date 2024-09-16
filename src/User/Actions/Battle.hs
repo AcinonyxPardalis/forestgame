@@ -18,10 +18,10 @@ damage attack =
           | mul < 85  -> 2 * attack
           | otherwise -> 3 * attack
 
-battle :: IO Bool
-battle = do
+battle :: Combatant -> IO (Bool, Combatant)
+battle ourAdventurer = do
     golem <- createRandomCombatant (30, 60) (5, 15)
-    ourAdventurer <- createRandomCombatant (50, 100) (10, 20)
+    --ourAdventurer <- createRandomCombatant (50, 100) (10, 20)
     
     act (golem, ourAdventurer)
    where
@@ -37,13 +37,13 @@ battle = do
                 flightChance <- randomRIO @Int (0,2) 
                 if flightChance == 1 then do
                     putStrLn "You escaped!"
-                    return True
+                    return (True, adventurer)
                 else do
                     golemDamage <- damage $ attack golem
                     let updatedAdventurer = adventurer {health = health adventurer - golemDamage}
                     if health updatedAdventurer <= 0 then do
                         putStrLn "You could not escape... The Golem killed you *_*"
-                        return False
+                        return (False, updatedAdventurer)
                     else do
                         --putStrLn ("The Golem stopped you and dealt " ++ show myDamage ++ "! Now you only have " ++ show (myHP - myDamage) ++ "HP!")
                         act (golem, updatedAdventurer)
@@ -54,10 +54,10 @@ battle = do
                 let updatedGolem = golem {health = health golem - adventurerDamage}
                 if  | health updatedAdventurer <= 0 -> do
                         putStrLn "You could not escape... The Golem killed you *_*"
-                        return False
+                        return (False, updatedAdventurer)
                     | health updatedGolem <= 0 -> do
                         putStrLn "You defeated the monster!" 
-                        return True
+                        return (True, updatedAdventurer)
                     | otherwise -> do
                         act (updatedGolem, updatedAdventurer)
             _ -> do
